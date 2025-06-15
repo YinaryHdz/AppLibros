@@ -23,15 +23,14 @@ fun ProfileScreen(
     val currentUser by userViewModel.currentUser.collectAsState()
     val viewedUser by userViewModel.viewedUser.collectAsState()
     val userBooks by bookViewModel.userBooks.collectAsState()
+    val archivedBooks by bookViewModel.archivedBooks.collectAsState()
 
     val isOwnProfile = userId == null || userId == currentUser?.uid
     val user = if (isOwnProfile) currentUser else viewedUser
 
     val favoriteBooks by userViewModel.favoriteBooks.collectAsState()
     val userLists by userViewModel.readingLists.collectAsState()
-
     val booksByList by userViewModel.booksByList.collectAsState()
-
 
     LaunchedEffect(userId) {
         val uid = if (isOwnProfile) FirebaseAuth.getInstance().currentUser?.uid else userId
@@ -41,29 +40,35 @@ fun ProfileScreen(
         }
 
         if (isOwnProfile) {
-            userViewModel.loadCurrentUser()
-            userViewModel.loadFavoriteBooks(FirebaseAuth.getInstance().currentUser?.uid ?: "")
+            FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
+                userViewModel.loadCurrentUser()
+                userViewModel.loadFavoriteBooks(uid)
+                bookViewModel.loadArchivedBooks(uid)
+            }
         } else {
             userViewModel.loadUserById(userId!!)
         }
     }
+    val targetUserId = userId ?: currentUser?.uid
 
-
-
-    // Carga de libros cuando el usuario esté listo
-    LaunchedEffect(user) {
-        user?.uid?.let { bookViewModel.loadBooksByUser(it) }
+    LaunchedEffect(targetUserId) {
+        targetUserId?.let {
+            bookViewModel.loadBooksByUser(it)
+        }
     }
+
 
     if (user != null) {
         ProfileContent(
             navController = navController,
             user = user,
             isOwnProfile = isOwnProfile,
-            userBooks = userBooks, // ✅ Pasamos libros
+            userBooks = userBooks,
+            archivedBooks = if (isOwnProfile) archivedBooks else emptyList(),
             favoriteBooks = if (isOwnProfile) favoriteBooks else emptyList(),
             readingLists = userLists,
             booksByList = booksByList,
+            bookViewModel = bookViewModel,
             onLogout = {
                 FirebaseAuth.getInstance().signOut()
                 navController.navigate(Screen.Start.route) {
@@ -79,5 +84,6 @@ fun ProfileScreen(
         )
     }
 }
+
 
 

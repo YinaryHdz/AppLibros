@@ -78,17 +78,6 @@ class UserViewModel : ViewModel() {
             }
     }
 
-    fun uploadProfileImageAndSave(imageUri: Uri, username: String, bio: String, onComplete: () -> Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        firestore.uploadProfileImage(
-            uid,
-            imageUri,
-            onSuccess = { downloadUrl ->
-                updateProfile(downloadUrl, username, bio, onComplete)
-            },
-            onFailure = { onComplete() }
-        )
-    }
 
     fun uploadProfileImageToImgBBAndSave(
         context: Context,
@@ -123,6 +112,7 @@ class UserViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val books = snapshot.documents.mapNotNull { it.toObject(Book::class.java) }
+                    .filter { !it.deleted && !it.archived }
                 _favoriteBooks.value = books
             }
     }
@@ -165,8 +155,10 @@ class UserViewModel : ViewModel() {
                         .collection("books")
                         .get()
                         .continueWith { booksTask ->
-                            val books = booksTask.result?.toObjects(Book::class.java) ?: emptyList()
+                            val books = booksTask.result?.toObjects(Book::class.java)
+                                ?.filter { !it.deleted && !it.archived } ?: emptyList()
                             result[listName] = books
+
                         }
                 }
 

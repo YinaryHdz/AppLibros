@@ -19,6 +19,8 @@ navigationCompose = "2.8.9"
 firebaseStorageKtx = "21.0.1"
 books = "1.0.0"
 carUiLib = "2.6.0"
+appcompat = "1.7.1"
+playServicesAuth = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -49,6 +51,8 @@ firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage
 books = { group = "com.google.android.mediahome", name = "books", version.ref = "books" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 car-ui-lib = { group = "com.android.car.ui", name = "car-ui-lib", version.ref = "carUiLib" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

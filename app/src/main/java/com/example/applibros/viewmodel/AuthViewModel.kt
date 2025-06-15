@@ -25,10 +25,27 @@ class AuthViewModel : ViewModel() {
         authRepo.loginUser(email, password, onSuccess, onFailure)
     }
 
-    //Manejo de sesión y la redirección automática según si el usuario está autenticado o no.
+    fun resetPassword(
+        email: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        authRepo.resetPassword(email, onSuccess, onFailure)
+    }
+    fun loginWithGoogle(
+        idToken: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        authRepo.loginWithGoogle(idToken, onSuccess, onFailure)
+    }
+
     fun checkUserLoggedIn(): Boolean {
         return authRepo.isUserLoggedIn()
     }
+
+
+
 
 
 }

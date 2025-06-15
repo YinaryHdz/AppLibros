@@ -14,5 +14,7 @@ data class Book(
     val likes: Int = 0,
     val views: Int = 0,
     val title_lowercase: String = "",
+    val archived : Boolean = false,
+    val deleted: Boolean = false,
     val authorUsername_lowercase: String = ""
 )

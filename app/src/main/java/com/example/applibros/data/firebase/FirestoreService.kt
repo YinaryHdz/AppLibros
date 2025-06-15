@@ -1,11 +1,13 @@
 package com.example.applibros.data.firebase
 
 import android.net.Uri
+import androidx.compose.runtime.Composable
 import com.example.applibros.data.model.Book
-import com.example.applibros.data.model.Chapter
 import com.example.applibros.data.model.Comment
+import com.example.applibros.data.model.CommentWithUser
 import com.example.applibros.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 
 data class SimpleUser(val uid: String, val username: String)
@@ -30,12 +32,78 @@ class FirestoreService {
             .addOnFailureListener { e -> onFailure(e) }
     }
 
-    fun addComment(comment: Comment, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        db.collection("comments")
-            .add(comment)
+    fun addComment(
+        comment: Comment,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val docRef = db.collection("comments").document()
+        val commentWithId = comment.copy(id = docRef.id)
+        docRef.set(commentWithId)
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { onFailure(it) }
     }
+
+
+
+    fun listenToCommentsWithUsers(
+        bookId: String,
+        chapterId: String,
+        onUpdate: (List<CommentWithUser>) -> Unit,
+        onError: (Exception) -> Unit
+    ): ListenerRegistration {
+        return db.collection("comments")
+            .whereEqualTo("bookId", bookId)
+            .whereEqualTo("chapterId", chapterId)
+            .orderBy("createdAt")
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    onError(e)
+                    return@addSnapshotListener
+                }
+
+                val comments = snapshots?.documents
+                    ?.mapNotNull { it.toObject(Comment::class.java) }
+                    ?: emptyList()
+
+                if (comments.isEmpty()) {
+                    onUpdate(emptyList()) // ✅ Notifica que ya no hay comentarios
+                    return@addSnapshotListener
+                }
+
+                val userIds = comments.map { it.userId }.toSet()
+
+                // ⚠️ Firestore no permite whereIn con listas vacías, pero ya lo evitamos arriba
+                db.collection("users")
+                    .whereIn("uid", userIds.toList())
+                    .get()
+                    .addOnSuccessListener { userResult ->
+                        val users = userResult.documents.mapNotNull { it.toObject(User::class.java) }
+                        val userMap = users.associateBy { it.uid }
+
+                        val combined = comments.map { comment ->
+                            CommentWithUser(comment, userMap[comment.userId])
+                        }
+
+                        onUpdate(combined)
+                    }
+                    .addOnFailureListener { onError(it) }
+            }
+    }
+
+
+    fun deleteComment(
+        commentId: String,
+        onSuccess:  () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("comments").document(commentId)
+            .delete()
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+
 
 
     //Obtener el nombre de usuario para personalizar la app
@@ -67,38 +135,21 @@ class FirestoreService {
             .addOnFailureListener { e -> onFailure(e) }
     }
 
-    //Actualizar imagen del usuario
-    fun uploadProfileImage(
-        uid: String,
-        imageUri: Uri,
-        onSuccess: (String) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        val ref = storage.reference.child("profile_images/$uid.jpg")
 
-        ref.putFile(imageUri)
-            .addOnSuccessListener {
-                ref.downloadUrl.addOnSuccessListener { uri ->
-                    onSuccess(uri.toString())
-                }.addOnFailureListener { onFailure(it) }
-            }
-            .addOnFailureListener { onFailure(it) }
-    }
-
-
-    fun getBooksByUser(
-        userId: String,
-        onResult: (List<Book>) -> Unit
-    ) {
-        FirebaseFirestore.getInstance()
-            .collection("books")
+    fun getBooksByUser(userId: String, onResult: (List<Book>) -> Unit) {
+        db.collection("books")
             .whereEqualTo("authorId", userId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
-                val books = snapshot.toObjects(Book::class.java)
+            .get()
+            .addOnSuccessListener { result ->
+                val books = result.mapNotNull { doc ->
+                    val book = doc.toObject(Book::class.java).copy(id = doc.id)
+                    if (!book.deleted) book else null
+                }
                 onResult(books)
             }
     }
+
+
 
     fun updateBookData(
         bookId: String,
@@ -124,23 +175,6 @@ class FirestoreService {
     }
 
 
-    fun uploadBookCover(
-        bookId: String,
-        imageUri: Uri,
-        onSuccess: (String) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        val ref = FirebaseStorage.getInstance().reference.child("book_covers/$bookId.jpg")
-        ref.putFile(imageUri)
-            .addOnSuccessListener {
-                ref.downloadUrl.addOnSuccessListener { uri ->
-                    onSuccess(uri.toString())
-                }.addOnFailureListener(onFailure)
-            }
-            .addOnFailureListener(onFailure)
-    }
-
-
     fun searchBooks(
         query: String,
         byAuthor: Boolean,
@@ -157,10 +191,12 @@ class FirestoreService {
             .get()
             .addOnSuccessListener { snapshot ->
                 val books = snapshot.toObjects(Book::class.java)
+                    .filter { !it.archived && !it.deleted }
                 onSuccess(books)
             }
             .addOnFailureListener(onFailure)
     }
+
 
     fun searchUsersByUsername(
         query: String,

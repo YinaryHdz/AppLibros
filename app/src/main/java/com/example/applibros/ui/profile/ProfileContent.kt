@@ -33,6 +33,7 @@ import coil.compose.AsyncImage
 import com.example.applibros.data.model.Book
 import com.example.applibros.data.model.User
 import com.example.applibros.ui.book.BookListItem
+import com.example.applibros.viewmodel.BookViewModel
 
 @Composable
 fun ProfileContent(
@@ -43,6 +44,8 @@ fun ProfileContent(
     favoriteBooks: List<Book>,
     readingLists: List<String>,
     booksByList: Map<String, List<Book>>,
+    archivedBooks: List<Book>,
+    bookViewModel: BookViewModel,
     onLogout: () -> Unit,
     onEdit: () -> Unit,
     onBookClick: (Book) -> Unit
@@ -105,9 +108,10 @@ fun ProfileContent(
             }
         } else {
             item {
+                val visibleBooks = userBooks.filter { !it.archived && !it.deleted }
                 HorizontalBookSection(
                     title = "Historias",
-                    books = userBooks,
+                    books = visibleBooks,
                     onBookClick = onBookClick,
                     onShowMoreClick = {
                         navController.navigate("user_books")
@@ -158,16 +162,40 @@ fun ProfileContent(
                 }
             }
         }
+        if (isOwnProfile && archivedBooks.isNotEmpty()) {
+            item {
+                HorizontalBookSection(
+                    title = "Archivados",
+                    books = archivedBooks,
+                    onBookClick = onBookClick,
+                    onShowMoreClick = { navController.navigate("archived_books") }, // Si haces una vista aparte
+                    actionButton = { book ->
+                        Button(onClick = {
+                            bookViewModel.unarchiveBook(book.id) {
+                                bookViewModel.loadArchivedBooks(user.uid) // Recarga
+                                bookViewModel.loadBooksByUser(user.uid)   // Por si lo devuelve al listado activo
+                            }
+                        }) {
+                            Text("Desarchivar")
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+        }
+
 
     }
 }
-
 @Composable
 fun HorizontalBookSection(
     title: String,
     books: List<Book>,
     onBookClick: (Book) -> Unit,
     onShowMoreClick: () -> Unit,
+    actionButton: @Composable ((Book) -> Unit)? = null
 ) {
     Column {
         Text(title, style = MaterialTheme.typography.titleSmall)
@@ -181,10 +209,15 @@ fun HorizontalBookSection(
 
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start)) {
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start)
+            ) {
                 items(books.take(maxItemsToShow)) { book ->
-                    BookCardCompact(book = book, onClick = { onBookClick(book) })
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        BookCardCompact(book = book, onClick = { onBookClick(book) })
+                        actionButton?.invoke(book)
+                    }
                 }
+
                 if (showMore) {
                     item {
                         Box(
@@ -197,12 +230,12 @@ fun HorizontalBookSection(
                             }
                         }
                     }
-
                 }
             }
         }
     }
 }
+
 
 
 

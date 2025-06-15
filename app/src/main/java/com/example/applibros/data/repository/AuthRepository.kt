@@ -3,6 +3,7 @@ package com.example.applibros.data.repository
 import com.example.applibros.data.firebase.FirestoreService
 import com.example.applibros.data.model.User
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 
 class AuthRepository {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -49,5 +50,32 @@ class AuthRepository {
     fun isUserLoggedIn(): Boolean {
         return FirebaseAuth.getInstance().currentUser != null
     }
+
+    fun resetPassword(email: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) onSuccess()
+                else onFailure(task.exception ?: Exception("Error desconocido"))
+            }
+    }
+
+    fun loginWithGoogle(
+        idToken: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        FirebaseAuth.getInstance().signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onFailure(task.exception ?: Exception("Google sign-in failed"))
+                }
+            }
+    }
+
+
+
 
 }

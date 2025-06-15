@@ -32,17 +32,11 @@ fun Navigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Start.route) {
         composable(Screen.Start.route) {
             StartScreen(
-                onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToHome = { navController.navigate(Screen.Home.route) }
             )
         }
 
-        composable(Screen.Login.route) {
-            LoginScreen(
-                onLoginSuccess = { navController.navigate(Screen.Home.route) }
-            )
-        }
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = { navController.navigate(Screen.Home.route) }
@@ -190,6 +184,19 @@ fun Navigation(navController: NavHostController) {
                 onBookClick = { book -> navController.navigate("book_detail/${book.id}") }
             )
         }
+
+        composable("archived_books") {
+            val bookViewModel: BookViewModel = viewModel()
+            val archivedBooks by bookViewModel.archivedBooks.collectAsState()
+
+            FullListScreen(
+                title = "Archivados",
+                books = archivedBooks,
+                onBack = { navController.popBackStack() },
+                onBookClick = { book -> navController.navigate("book_detail/${book.id}") }
+            )
+        }
+
 
 
 

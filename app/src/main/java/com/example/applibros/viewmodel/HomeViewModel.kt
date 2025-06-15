@@ -40,6 +40,9 @@ class HomeViewModel : ViewModel() {
             .addSnapshotListener { snapshot, error ->
                 if (error == null && snapshot != null) {
                     val books = snapshot.toObjects(Book::class.java)
+                        .filter { !it.archived && !it.deleted }
+                        .sortedByDescending { it.createdAt }
+
                     _allBooks.value = books
                 }
             }

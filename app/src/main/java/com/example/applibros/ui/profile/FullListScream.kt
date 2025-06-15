@@ -46,6 +46,8 @@ fun FullListScreen(
     onBack: () -> Unit,
     onBookClick: (Book) -> Unit
 ) {
+    val visibleBooks = books.filter { !it.archived && !it.deleted }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,7 +60,7 @@ fun FullListScreen(
             )
         }
     ) { padding ->
-        if (books.isEmpty()) {
+        if (visibleBooks.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -75,13 +77,14 @@ fun FullListScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                items(books) { book ->
+                items(visibleBooks) { book ->
                     BookCard(book = book, onClick = { onBookClick(book) })
                 }
             }
         }
     }
 }
+
 
 
 
@@ -108,6 +111,7 @@ fun BookCardCompact(book: Book, onClick: () -> Unit) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
+
     }
 }
 @Composable

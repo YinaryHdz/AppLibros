@@ -75,7 +75,9 @@ class BookViewModel : ViewModel() {
                 authorUsername = username,
                 title_lowercase = title.lowercase(),
                 authorUsername_lowercase = username.lowercase(),
-                coverImageUrl = coverUrl
+                coverImageUrl = coverUrl,
+                archived = false,
+                deleted = false
             )
         }
 
@@ -104,25 +106,41 @@ class BookViewModel : ViewModel() {
 
 
 
-    //Carga los libros publicados por cada usuario
     fun loadBooksByUser(userId: String) {
-        firestore.getBooksByUser(userId) { books ->
-            _userBooks.value = books
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
+        firestore.getBooksByUser(userId) { allBooks ->
+            val filteredBooks = if (userId == currentUserId) {
+                // Soy el autor: muestro todos excepto los eliminados
+                allBooks.filter { !it.deleted }
+            } else {
+                // Otro usuario: muestro solo activos
+                allBooks.filter { !it.archived && !it.deleted }
+            }
+            _userBooks.value = filteredBooks
         }
+        Log.d("BookFilter", "Filtrando libros del usuario: $userId - actual: $currentUserId")
+
     }
+
 
     //Carga un libro especifico por su id
     fun loadBookById(bookId: String) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         FirebaseFirestore.getInstance()
             .collection("books")
             .document(bookId)
             .get()
             .addOnSuccessListener { doc ->
                 doc.toObject(Book::class.java)?.let {
-                    _selectedBook.value = it.copy(id = doc.id)
+                    val book = it.copy(id = doc.id)
+                    if (book.deleted) return@addOnSuccessListener
+                    if (book.archived && book.authorId != currentUserId) return@addOnSuccessListener
+                    _selectedBook.value = book
                 }
             }
     }
+
 
     //Muestra los capitulos
     fun loadChaptersForBook(bookId: String) {
@@ -348,6 +366,50 @@ class BookViewModel : ViewModel() {
                 onResult(snapshot.exists())
             }
     }
+    //Archivar un libro
+    fun archiveBook(bookId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("books")
+            .document(bookId)
+            .update("archived", true)
+    }
+    //Eliminar un libro
+    fun deleteBook(bookId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("books")
+            .document(bookId)
+            .delete()
+    }
+
+    //Mostrar los libros archivados
+    private val _archivedBooks = MutableStateFlow<List<Book>>(emptyList())
+    val archivedBooks: StateFlow<List<Book>> = _archivedBooks
+
+    fun loadArchivedBooks(userId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("books")
+            .whereEqualTo("authorId", userId)
+            .whereEqualTo("archived", true)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val books = snapshot.toObjects(Book::class.java)
+                _archivedBooks.value = books
+            }
+    }
+
+    fun unarchiveBook(bookId: String, onComplete: () -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("books")
+            .document(bookId)
+            .update("archived", false)
+            .addOnSuccessListener { onComplete() }
+            .addOnFailureListener { onComplete() }
+    }
+
+
+
+
+
 
 
 
