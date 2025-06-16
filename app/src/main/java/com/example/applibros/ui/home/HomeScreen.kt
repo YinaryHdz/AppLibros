@@ -2,6 +2,7 @@ package com.example.applibros.ui.home
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,13 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,14 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.applibros.R
 import com.example.applibros.data.model.Book
 import com.example.applibros.navigation.Screen
 import com.example.applibros.viewmodel.HomeViewModel
@@ -56,27 +55,18 @@ fun HomeScreen(navController: NavController) {
     val listState = rememberLazyListState()
     val selectedIndex = remember { mutableStateOf(0) }
     val coroutineScope = rememberCoroutineScope()
-    val recentlyUpdatedBooks = books
-        .sortedByDescending { it.updatedAt }
-        .take(10)
+    val recentlyUpdatedBooks = books.sortedByDescending { it.updatedAt }.take(10)
     val recentListState = rememberLazyListState()
     val selectedRecentIndex = remember { mutableStateOf(0) }
     val hasRecentManualSelection = remember { mutableStateOf(false) }
 
-// Detección automática de scroll con reinicio de selección manual
-    LaunchedEffect(
-        recentListState.firstVisibleItemScrollOffset,
-        recentListState.firstVisibleItemIndex
-    ) {
+    LaunchedEffect(recentListState.firstVisibleItemScrollOffset, recentListState.firstVisibleItemIndex) {
         val layoutInfo = recentListState.layoutInfo
         val viewportCenter = layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset / 2
-        val centered = layoutInfo.visibleItemsInfo.minByOrNull { item ->
-            val itemCenter = item.offset + item.size / 2
-            kotlin.math.abs(itemCenter - viewportCenter)
+        val centered = layoutInfo.visibleItemsInfo.minByOrNull {
+            kotlin.math.abs((it.offset + it.size / 2) - viewportCenter)
         }
-
         centered?.let {
-            // Si el usuario había hecho una selección manual, la reiniciamos después de un nuevo scroll
             if (hasRecentManualSelection.value) {
                 hasRecentManualSelection.value = false
             } else {
@@ -85,18 +75,11 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-
-
-    // Detectar libro centrado y actualizar automáticamente
-    LaunchedEffect(
-        listState.firstVisibleItemScrollOffset,
-        listState.firstVisibleItemIndex
-    ) {
+    LaunchedEffect(listState.firstVisibleItemScrollOffset, listState.firstVisibleItemIndex) {
         val layoutInfo = listState.layoutInfo
         val viewportCenter = layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset / 2
-        val centered = layoutInfo.visibleItemsInfo.minByOrNull { item ->
-            val itemCenter = item.offset + item.size / 2
-            kotlin.math.abs(itemCenter - viewportCenter)
+        val centered = layoutInfo.visibleItemsInfo.minByOrNull {
+            kotlin.math.abs((it.offset + it.size / 2) - viewportCenter)
         }
         centered?.let {
             selectedIndex.value = it.index
@@ -105,205 +88,285 @@ fun HomeScreen(navController: NavController) {
 
     val selectedBook = books.getOrNull(selectedIndex.value)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("LibroLibre") },
-                actions = {
-                    IconButton(onClick = { navController.navigate(Screen.Search.route) }) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar libros")
-                    }
-                    IconButton(onClick = { navController.navigate(Screen.CreateBook.route) }) {
-                        Icon(Icons.Default.AddCircle, contentDescription = "Agregar Libro")
-                    }
-                    IconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
-                        if (!user?.photoUrl.isNullOrEmpty()) {
-                            AsyncImage(
-                                model = user?.photoUrl,
-                                contentDescription = "Perfil",
-                                modifier = Modifier.size(32.dp).clip(CircleShape)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF121212))
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "LibroLibre",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontFamily = FontFamily(Font(R.font.dancing_script_bold)), // Paso 2
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 26.sp,
+                                color = Color(0xFF2196F3) // Azul del logo
                             )
-                        } else {
-                            Icon(Icons.Default.Person, contentDescription = "Perfil")
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = { navController.navigate(Screen.Search.route) }) {
+                            Icon(Icons.Default.Search, contentDescription = "Buscar", tint = Color(0xFF2196F3))
                         }
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        if (user == null) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(paddingValues)
-            ) {
-                Text(
-                    "📚 Descubre",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp)
+                        IconButton(onClick = { navController.navigate(Screen.CreateBook.route) }) {
+                            Icon(Icons.Default.AddCircle, contentDescription = "Agregar", tint = Color(0xFF2196F3))
+                        }
+                        IconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
+                            if (!user?.photoUrl.isNullOrEmpty()) {
+                                AsyncImage(
+                                    model = user?.photoUrl,
+                                    contentDescription = "Perfil",
+                                    modifier = Modifier.size(32.dp).clip(CircleShape)
+                                )
+                            } else {
+                                Icon(Icons.Default.Person, contentDescription = "Perfil", tint = Color(0xFF2196F3))
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFFE6F6FF) // Fondo celeste claro
+                    )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-                // Carrusel de libros
-                LazyRow(
-                    state = listState,
-                    flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+
+        ) { paddingValues ->
+            if (user == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    itemsIndexed(books) { index, book ->
-                        val isSelected = index == selectedIndex.value
-                        AnimatedBookCoverItem(
-                            book = book,
-                            isSelected = isSelected,
-                            onClick = {
-                                selectedIndex.value = index
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(index)
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues)
+                        .padding(bottom = 16.dp)
+                ) {
+                    SectionCard(title = "📚 Descubre") {
+                        LazyRow(
+                            state = listState,
+                            flingBehavior = rememberSnapFlingBehavior(listState),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            itemsIndexed(books) { index, book ->
+                                AnimatedBookCoverItem(
+                                    book = book,
+                                    isSelected = index == selectedIndex.value
+                                ) {
+                                    selectedIndex.value = index
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(index)
+                                    }
                                 }
                             }
-                        )
-                    }
-                }
+                        }
 
-                // Detalles del libro seleccionado
-                selectedBook?.let { book ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 16.dp)
-                            .animateContentSize()
-                    ) {
-                        Text(book.title, style = MaterialTheme.typography.titleLarge)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            book.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 4,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Género: ${book.genre}", style = MaterialTheme.typography.labelSmall)
-                        Text("Actualizado: ${getRelativeTime(book.updatedAt)}", style = MaterialTheme.typography.labelSmall)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = { navController.navigate("book_detail/${book.id}") }) {
-                            Text("Leer ahora")
+                        selectedBook?.let { book ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp)
+                                    .animateContentSize(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp) // padding interno del contenido, dentro del Card
+                                ) {
+                                    Text(
+                                        book.title,
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = book.description,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        maxLines = 4,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Género: ${book.genre}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "Actualizado: ${getRelativeTime(book.updatedAt)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { navController.navigate("book_detail/${book.id}") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(50),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                                    ) {
+                                        Text("Leer ahora", color = Color.White)
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("📅 Actualizados recientemente", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 16.dp, top = 32.dp))
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val recentCoroutine = rememberCoroutineScope()
-
-                // Mostrar carrusel
-                    LazyRow(
-                        state = recentListState,
-                        flingBehavior = rememberSnapFlingBehavior(lazyListState = recentListState),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        itemsIndexed(recentlyUpdatedBooks) { index, book ->
-                            val isSelected = index == selectedRecentIndex.value
-                            AnimatedBookCoverItem(
-                                book = book,
-                                isSelected = isSelected,
-                                onClick = {
+                    SectionCard(title = "📅 Actualizados recientemente") {
+                        LazyRow(
+                            state = recentListState,
+                            flingBehavior = rememberSnapFlingBehavior(recentListState),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            itemsIndexed(recentlyUpdatedBooks) { index, book ->
+                                AnimatedBookCoverItem(
+                                    book = book,
+                                    isSelected = index == selectedRecentIndex.value
+                                ) {
                                     selectedRecentIndex.value = index
                                     hasRecentManualSelection.value = true
-                                    recentCoroutine.launch {
+                                    coroutineScope.launch {
                                         recentListState.animateScrollToItem(index)
                                     }
                                 }
-                            )
+                            }
+                        }
+
+                        recentlyUpdatedBooks.getOrNull(selectedRecentIndex.value)?.let { book ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp)
+                                    .animateContentSize(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp) // padding interno del contenido, dentro del Card
+                                ){
+                                    Text(
+                                        book.title,
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = book.description,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        maxLines = 4,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Género: ${book.genre}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "Actualizado: ${getRelativeTime(book.updatedAt)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { navController.navigate("book_detail/${book.id}") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(50),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                                    ) {
+                                        Text("Leer ahora", color = Color.White)
+                                    }
+                                }
+                            }
                         }
                     }
 
-            // Mostrar detalles del libro seleccionado
-                recentlyUpdatedBooks.getOrNull(selectedRecentIndex.value)?.let { book ->
-                    Column(
+
+                    // Secciones adicionales
+                    val mostViewed = books.sortedByDescending { it.views }.take(10)
+                    val booksByGenre = books.groupBy { it.genre }
+                    val popularTags = books.flatMap { it.tags }
+                        .groupingBy { it }.eachCount()
+                        .toList().sortedByDescending { it.second }
+                        .take(5).map { it.first }
+
+                    val booksByTag = popularTags.associateWith { tag ->
+                        books.filter { it.tags.contains(tag) }.take(10)
+                    }
+
+                    TaggedSection("📈 Más vistos", mostViewed) {
+                        navController.navigate("book_detail/${it.id}")
+                    }
+
+                    booksByGenre.forEach { (genre, booksForGenre) ->
+                        if (booksForGenre.isNotEmpty()) {
+                            TaggedSection("🎨 Género: $genre", booksForGenre) {
+                                navController.navigate("book_detail/${it.id}")
+                            }
+                        }
+                    }
+
+                    booksByTag.forEach { (tag, booksForTag) ->
+                        if (booksForTag.isNotEmpty()) {
+                            TaggedSection("🏷️ Etiqueta: $tag", booksForTag) {
+                                navController.navigate("book_detail/${it.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            FirebaseAuth.getInstance().signOut()
+                            navController.navigate(Screen.Start.route) { popUpTo(0) }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 16.dp)
-                            .animateContentSize()
+                            .padding(horizontal = 24.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                     ) {
-                        Text(book.title, style = MaterialTheme.typography.titleLarge)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            book.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 4,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Género: ${book.genre}", style = MaterialTheme.typography.labelSmall)
-                        Text("Actualizado: ${getRelativeTime(book.updatedAt)}", style = MaterialTheme.typography.labelSmall)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = { navController.navigate("book_detail/${book.id}") }) {
-                            Text("Leer ahora")
-                        }
+                        Text("Cerrar sesión", color = Color.White)
                     }
-                }
-
-                // Secciones adicionales
-                val mostViewed = books.sortedByDescending { it.views }.take(10)
-                val booksByGenre = books.groupBy { it.genre }
-                val popularTags = books.flatMap { it.tags }
-                    .groupingBy { it }.eachCount()
-                    .toList().sortedByDescending { it.second }
-                    .take(5).map { it.first }
-
-                val booksByTag = popularTags.associateWith { tag ->
-                    books.filter { it.tags.contains(tag) }.take(10)
-                }
-
-                TaggedSection("📈 Más vistos", mostViewed) {
-                    navController.navigate("book_detail/${it.id}")
-                }
-
-                booksByGenre.forEach { (genre, booksForGenre) ->
-                    if (booksForGenre.isNotEmpty()) {
-                        TaggedSection("🎨 Género: $genre", booksForGenre) {
-                            navController.navigate("book_detail/${it.id}")
-                        }
-                    }
-                }
-
-                booksByTag.forEach { (tag, booksForTag) ->
-                    if (booksForTag.isNotEmpty()) {
-                        TaggedSection("🏷️ Etiqueta: $tag", booksForTag) {
-                            navController.navigate("book_detail/${it.id}")
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        FirebaseAuth.getInstance().signOut()
-                        navController.navigate(Screen.Start.route) { popUpTo(0) }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
-                ) {
-                    Text("Cerrar sesión")
                 }
             }
         }
     }
 }
+@Composable
+fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Spacer(modifier = Modifier.height(8.dp))
+            content()
+        }
+    }
+}
+
 
 @Composable
 fun TransparentBookCard(book: Book, fixedHeight: Boolean = false, onClick: () -> Unit) {
@@ -317,44 +380,17 @@ fun TransparentBookCard(book: Book, fixedHeight: Boolean = false, onClick: () ->
             .clickable { onClick() }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Text(book.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(book.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,     color = Color.White.copy(alpha = 0.9f))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(book.description, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(book.description, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis,     color = Color.White.copy(alpha = 0.9f),)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Género: ${book.genre}", style = MaterialTheme.typography.labelSmall)
-            Text("Actualizado: ${getRelativeTime(book.updatedAt)}", style = MaterialTheme.typography.labelSmall)
+            Text("Género: ${book.genre}", style = MaterialTheme.typography.labelSmall,     color = Color.White.copy(alpha = 0.9f),)
+            Text("Actualizado: ${getRelativeTime(book.updatedAt)}", style = MaterialTheme.typography.labelSmall,     color = Color.White.copy(alpha = 0.9f),)
             Spacer(modifier = Modifier.weight(1f))
             Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Leer ahora")
             }
         }
-    }
-}
-
-@Composable
-fun BookHorizontalSection(books: List<Book>, onClick: (Book) -> Unit) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(books) { book ->
-            TransparentBookCard(book = book, fixedHeight = true) {
-                onClick(book)
-            }
-        }
-    }
-}
-
-@Composable
-fun SectionTitle(icon: ImageVector, text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
     }
 }
 
@@ -395,17 +431,13 @@ fun getRelativeTime(timeMillis: Long): String {
 }
 
 
-
 @Composable
 fun TaggedSection(
     title: String,
     books: List<Book>,
     onBookClick: (Book) -> Unit
 ) {
-    Column(modifier = Modifier.padding(start = 16.dp, bottom = 24.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-
+    SectionCard(title = title) {
         LazyRow(
             contentPadding = PaddingValues(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -421,45 +453,63 @@ fun TaggedSection(
 
 
 
+
 @Composable
 fun BookCarouselItem(book: Book, onClick: () -> Unit) {
-    Column(
+    Card(
         modifier = Modifier
             .width(200.dp)
-            .clickable { onClick() }
             .padding(end = 12.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f))
     ) {
-        AsyncImage(
-            model = book.coverImageUrl,
-            contentDescription = book.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .clip(RoundedCornerShape(12.dp))
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = book.title,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = book.description,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Button(
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Leer ahora")
+        Column(modifier = Modifier.padding(12.dp)) {
+            AsyncImage(
+                model = book.coverImageUrl,
+                contentDescription = book.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = book.title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = book.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.9f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+            ) {
+                Text("Leer ahora", color = Color.White)
+            }
         }
     }
 }
+
 
 
 
