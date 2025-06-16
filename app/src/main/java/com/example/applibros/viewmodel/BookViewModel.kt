@@ -4,9 +4,11 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.applibros.data.firebase.FirestoreService
 import com.example.applibros.data.model.Book
 import com.example.applibros.data.model.Chapter
+import com.example.applibros.data.model.User
 import com.example.applibros.ui.book.BookValidator
 import com.example.applibros.utils.Constants.IMGBB_API_KEY
 import com.example.applibros.utils.uploadToImgBB
@@ -14,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class BookViewModel : ViewModel() {
 
@@ -31,6 +34,23 @@ class BookViewModel : ViewModel() {
     val selectedChapter: StateFlow<Chapter?> = _selectedChapter
 
     private val db = FirebaseFirestore.getInstance()
+
+    private val _author = MutableStateFlow<User?>(null)
+    val author: StateFlow<User?> = _author
+
+    fun loadAuthorById(authorId: String) {
+        firestore.getUserById(
+            uid = authorId,
+            onSuccess = { user ->
+                _author.value = user
+            },
+            onFailure = { e ->
+                Log.e("BookViewModel", "Error al cargar autor", e)
+            }
+        )
+    }
+
+
 
     //Crear libro
     fun createBook(

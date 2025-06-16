@@ -46,7 +46,7 @@ fun CreateBookScreen(onBookCreated: () -> Unit) {
     val context = LocalContext.current
     val viewModel: BookViewModel = viewModel()
 
-    val genres = listOf("Ficción", "No Ficción", "Misterio", "Romance", "Fantasía", "Ciencia Ficción")
+    val genres = listOf("Miedo", "No Ficción", "Misterio", "Romance", "Fantasía", "Ciencia Ficción", "Fanfic")
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
