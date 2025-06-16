@@ -71,6 +71,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.material3)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
+
 
 
 

@@ -73,7 +73,7 @@ class FirestoreService {
 
                 val userIds = comments.map { it.userId }.toSet()
 
-                // ⚠️ Firestore no permite whereIn con listas vacías, pero ya lo evitamos arriba
+                // Frestore no permite whereIn con listas vacías, pero ya lo evitamos arriba
                 db.collection("users")
                     .whereIn("uid", userIds.toList())
                     .get()

@@ -213,13 +213,21 @@ class BookViewModel : ViewModel() {
             bookId = bookId,
             title = title,
             content = content,
-            order = System.currentTimeMillis().toInt() // simple ordenamiento temporal
+            order = System.currentTimeMillis().toInt()
         )
 
         chapterRef.set(chapter)
-            .addOnSuccessListener { onComplete() }
+            .addOnSuccessListener {
+                // actualiza la marca de tiempo del libro
+                FirebaseFirestore.getInstance()
+                    .collection("books")
+                    .document(bookId)
+                    .update("updatedAt", System.currentTimeMillis())
+                    .addOnCompleteListener { onComplete() }
+            }
             .addOnFailureListener { onComplete() }
     }
+
 
     //Busca capitulos para actualizar
     fun loadChapterById(chapterId: String) {
@@ -252,18 +260,28 @@ class BookViewModel : ViewModel() {
             .addOnSuccessListener { snapshot ->
                 val docRef = snapshot.documents.firstOrNull()?.reference
                 if (docRef != null) {
+                    val bookId = docRef.path.split("/")[1] // Extrae el ID del libro del path
+
                     docRef.update(
                         mapOf(
                             "title" to title,
                             "content" to content
                         )
-                    ).addOnSuccessListener { onComplete() }
+                    ).addOnSuccessListener {
+                        //  actualiza la marca de tiempo del libro
+                        FirebaseFirestore.getInstance()
+                            .collection("books")
+                            .document(bookId)
+                            .update("updatedAt", System.currentTimeMillis())
+                            .addOnCompleteListener { onComplete() }
+                    }
                 } else {
                     onComplete()
                 }
             }
             .addOnFailureListener { onComplete() }
     }
+
     //Guarda el progreso de lectura
     fun saveReadingProgress(bookId: String, userId: String, chapterIndex: Int) {
         db.collection("readingProgress")
