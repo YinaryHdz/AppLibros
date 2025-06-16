@@ -91,7 +91,6 @@ fun HomeScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -177,24 +176,24 @@ fun HomeScreen(navController: NavController) {
                                     .padding(vertical = 16.dp)
                                     .animateContentSize(),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp) // padding interno del contenido, dentro del Card
+                                        .padding(16.dp)
                                 ) {
                                     Text(
                                         book.title,
                                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = book.description,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
                                         maxLines = 4,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -202,21 +201,21 @@ fun HomeScreen(navController: NavController) {
                                     Text(
                                         text = "Género: ${book.genre}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
                                     Text(
                                         text = "Actualizado: ${getRelativeTime(book.updatedAt)}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Button(
                                         onClick = { navController.navigate("book_detail/${book.id}") },
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(50),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
-                                        Text("Leer ahora", color = Color.White)
+                                        Text("Leer ahora", color = MaterialTheme.colorScheme.onPrimary)
                                     }
                                 }
                             }
@@ -251,24 +250,24 @@ fun HomeScreen(navController: NavController) {
                                     .padding(vertical = 16.dp)
                                     .animateContentSize(),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp) // padding interno del contenido, dentro del Card
-                                ){
+                                        .padding(16.dp)
+                                ) {
                                     Text(
                                         book.title,
                                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = book.description,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
                                         maxLines = 4,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -276,26 +275,27 @@ fun HomeScreen(navController: NavController) {
                                     Text(
                                         text = "Género: ${book.genre}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
                                     Text(
                                         text = "Actualizado: ${getRelativeTime(book.updatedAt)}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Button(
                                         onClick = { navController.navigate("book_detail/${book.id}") },
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(50),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
-                                        Text("Leer ahora", color = Color.White)
+                                        Text("Leer ahora", color = MaterialTheme.colorScheme.onPrimary)
                                     }
                                 }
                             }
                         }
                     }
+
 
 
                     // Secciones adicionales
@@ -356,16 +356,21 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Spacer(modifier = Modifier.height(8.dp))
             content()
         }
     }
 }
+
 
 
 @Composable
@@ -462,8 +467,8 @@ fun BookCarouselItem(book: Book, onClick: () -> Unit) {
             .padding(end = 12.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             AsyncImage(
@@ -481,7 +486,7 @@ fun BookCarouselItem(book: Book, onClick: () -> Unit) {
             Text(
                 text = book.title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -491,7 +496,7 @@ fun BookCarouselItem(book: Book, onClick: () -> Unit) {
             Text(
                 text = book.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.9f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -502,13 +507,14 @@ fun BookCarouselItem(book: Book, onClick: () -> Unit) {
                 onClick = onClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Leer ahora", color = Color.White)
+                Text("Leer ahora", color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
 }
+
 
 
 

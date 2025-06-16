@@ -2,62 +2,65 @@ package com.example.applibros.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.example.applibros.R
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
+// 🎨 Paleta personalizada base
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = Color(0xFF2196F3),
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    background = Color.White,
+    onBackground = Color.Black,
+    surface = Color(0xFFF6F6F6),
+    onSurface = Color.Black
 )
+
+private val DarkColorScheme = darkColorScheme(
+    primary = Color(0xFF2196F3),
+    onPrimary = Color.White,
+    background = Color(0xFF121212),
+    onBackground = Color.White,
+    surface = Color(0xFF1E1E1E),
+    onSurface = Color.White
+)
+
+// 🖋️ Fuente personalizada (script)
 val DancingScript = FontFamily(
     Font(R.font.dancing_script_bold, FontWeight.Bold)
 )
 
+// 🌗 Theme principal de la app
 @Composable
 fun AppLibrosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val context = LocalContext.current
+    val customPrimary = Color(0xFF2196F3)
+
+    val baseColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
+    // 🧩 Reemplaza solo primary/onPrimary con tu branding
+    val finalColorScheme = baseColorScheme.copy(
+        primary = customPrimary,
+        onPrimary = Color.White
+    )
+
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = finalColorScheme,
         typography = Typography,
         content = content
     )
