@@ -10,7 +10,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 
-data class SimpleUser(val uid: String, val username: String)
+data class SimpleUser(
+    val uid: String,
+    val username: String,
+    val photoUrl: String? = null
+)
+
+
 class FirestoreService {
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
@@ -209,15 +215,20 @@ class FirestoreService {
             .endAt(query.lowercase() + "\uf8ff")
             .get()
             .addOnSuccessListener { snapshot ->
-                val users = snapshot.documents.mapNotNull {
-                    val uid = it.getString("uid")
-                    val username = it.getString("username")
-                    if (uid != null && username != null) SimpleUser(uid, username) else null
+                val users = snapshot.documents.mapNotNull { doc ->
+                    val uid = doc.getString("uid")
+                    val username = doc.getString("username")
+                    val photoUrl = doc.getString("photoUrl") // <- Agregado aquí
+
+                    if (uid != null && username != null)
+                        SimpleUser(uid, username, photoUrl)
+                    else null
                 }
                 onSuccess(users)
             }
             .addOnFailureListener(onFailure)
     }
+
 
 
 

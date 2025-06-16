@@ -4,6 +4,7 @@ import com.example.applibros.data.firebase.FirestoreService
 import com.example.applibros.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.userProfileChangeRequest
 
 class AuthRepository {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -20,13 +21,24 @@ class AuthRepository {
             .addOnSuccessListener { result ->
                 val firebaseUser = result.user
                 if (firebaseUser != null) {
-                    val user = User(
-                        uid = firebaseUser.uid,
-                        username = username,
-                        email = firebaseUser.email ?: "",
-                        photoUrl = firebaseUser.photoUrl?.toString() ?: ""
-                    )
-                    firestoreService.createUser(user, onSuccess, onFailure)
+                    val profileUpdates = userProfileChangeRequest {
+                        displayName = username
+                    }
+
+                    firebaseUser.updateProfile(profileUpdates)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val user = User(
+                                    uid = firebaseUser.uid,
+                                    username = username,
+                                    email = firebaseUser.email ?: "",
+                                    photoUrl = firebaseUser.photoUrl?.toString() ?: ""
+                                )
+                                firestoreService.createUser(user, onSuccess, onFailure)
+                            } else {
+                                onFailure(task.exception ?: Exception("Error al actualizar el perfil"))
+                            }
+                        }
                 } else {
                     onFailure(Exception("Usuario nulo"))
                 }
@@ -35,6 +47,7 @@ class AuthRepository {
                 onFailure(e)
             }
     }
+
 
     fun loginUser(
         email: String,
