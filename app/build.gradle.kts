@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.foundation.layout)
+    implementation (libs.androidx.datastore.preferences)
 
 
 

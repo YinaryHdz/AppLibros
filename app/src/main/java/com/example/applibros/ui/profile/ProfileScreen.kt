@@ -27,6 +27,8 @@ fun ProfileScreen(
 
     val isOwnProfile = userId == null || userId == currentUser?.uid
     val user = if (isOwnProfile) currentUser else viewedUser
+    val profileUserId = if (isOwnProfile) currentUser?.uid else userId
+
 
     val favoriteBooks by userViewModel.favoriteBooks.collectAsState()
     val userLists by userViewModel.readingLists.collectAsState()
@@ -63,6 +65,7 @@ fun ProfileScreen(
             navController = navController,
             user = user,
             isOwnProfile = isOwnProfile,
+            profileUserId = profileUserId ?: "",
             userBooks = userBooks,
             archivedBooks = if (isOwnProfile) archivedBooks else emptyList(),
             favoriteBooks = if (isOwnProfile) favoriteBooks else emptyList(),

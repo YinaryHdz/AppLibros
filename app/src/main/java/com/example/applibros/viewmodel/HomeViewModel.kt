@@ -20,6 +20,11 @@ class HomeViewModel : ViewModel() {
     val allBooks: StateFlow<List<Book>> = _allBooks
 
     init {
+        loadUserData()
+        loadAllBooks()
+    }
+
+    fun loadUserData() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid != null) {
             viewModelScope.launch {
@@ -30,8 +35,6 @@ class HomeViewModel : ViewModel() {
                 )
             }
         }
-
-        loadAllBooks()
     }
 
     fun loadAllBooks() {
@@ -47,5 +50,4 @@ class HomeViewModel : ViewModel() {
                 }
             }
     }
-
 }

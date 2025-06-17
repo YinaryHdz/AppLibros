@@ -2,6 +2,7 @@
 accompanistPager = "0.30.1"
 agp = "8.7.3"
 coilCompose = "2.2.2"
+datastorePreferences = "1.1.7"
 firebaseBom = "33.12.0"
 foundation = "1.8.2"
 foundationGestures = "1.5.0"
@@ -29,6 +30,7 @@ playServicesAuth = "21.3.0"
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-foundation-gestures = { module = "androidx.compose.foundation:foundation-gestures", version.ref = "foundationGestures" }
 androidx-foundation-layout = { module = "androidx.compose.foundation:foundation-layout", version.ref = "foundation" }

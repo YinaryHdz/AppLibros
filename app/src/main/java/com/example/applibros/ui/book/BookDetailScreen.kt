@@ -1,5 +1,6 @@
 package com.example.applibros.ui.book
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -56,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -65,6 +68,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.example.applibros.ui.theme.DancingScript
 import com.example.applibros.viewmodel.BookViewModel
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun BookDetailScreen(
@@ -82,6 +90,9 @@ fun BookDetailScreen(
     var showDeleteOptions by remember { mutableStateOf(false) }
 
     val author by viewModel.author.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(book?.authorId) {
         book?.authorId?.let { viewModel.loadAuthorById(it) }
@@ -138,6 +149,7 @@ fun BookDetailScreen(
                     .padding(horizontal = 16.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             // 👤 Autor con imagen + nombre centrado
             author?.let { user ->
                 Column(
@@ -162,6 +174,29 @@ fun BookDetailScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            // 👁️ Vistas
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Visibility,
+                    contentDescription = "Vistas",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "${bookData.views} vistas",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
             // 📚 Descripción
             Text(
@@ -222,13 +257,25 @@ fun BookDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+
                     // 📖 Leer libro
                     Button(
-                        onClick = { navController.navigate("read_book/$bookId") },
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    val bookRef = Firebase.firestore.collection("books").document(bookId)
+                                    bookRef.update("views", FieldValue.increment(1))
+                                } catch (e: Exception) {
+                                    Log.e("BookView", "Error al incrementar vistas", e)
+                                }
+                                navController.navigate("read_book/$bookId")
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Leer libro")
                     }
+
 
                     // ❤️ Favorito y lista (solo si no es del usuario)
                     if (!isOwnBook) {

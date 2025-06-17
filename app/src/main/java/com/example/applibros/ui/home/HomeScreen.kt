@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.example.applibros.R
 import com.example.applibros.data.model.Book
@@ -59,6 +61,22 @@ fun HomeScreen(navController: NavController) {
     val recentListState = rememberLazyListState()
     val selectedRecentIndex = remember { mutableStateOf(0) }
     val hasRecentManualSelection = remember { mutableStateOf(false) }
+
+    val oldBooks = books.sortedBy { it.createdAt }.take(5)
+    val popularBooks = books.sortedByDescending { it.views }.take(5)
+    val recentBooks = books.sortedByDescending { it.createdAt }.take(5)
+
+    val discoveredBooks = (oldBooks + popularBooks + recentBooks)
+        .distinctBy { it.id }
+        .shuffled()
+
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    LaunchedEffect(navBackStackEntry) {
+        viewModel.loadUserData()
+    }
+
 
     LaunchedEffect(recentListState.firstVisibleItemScrollOffset, recentListState.firstVisibleItemIndex) {
         val layoutInfo = recentListState.layoutInfo

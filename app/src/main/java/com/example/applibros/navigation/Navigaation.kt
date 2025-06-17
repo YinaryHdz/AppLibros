@@ -149,17 +149,15 @@ fun Navigation(navController: NavHostController) {
         }
 
 
-        composable("reading_list_detail/{listName}") { backStackEntry ->
-            val userViewModel: UserViewModel = viewModel()
+        composable("reading_list_detail/{ownerId}/{listName}") { backStackEntry ->
+            val ownerId = backStackEntry.arguments?.getString("ownerId") ?: ""
             val listName = backStackEntry.arguments?.getString("listName") ?: ""
+
+            val userViewModel: UserViewModel = viewModel()
             val booksByList by userViewModel.booksByList.collectAsState()
 
-            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-
-            LaunchedEffect(currentUserId) {
-                currentUserId?.let {
-                    userViewModel.loadBooksFromReadingLists(it)
-                }
+            LaunchedEffect(ownerId) {
+                userViewModel.loadBooksFromReadingLists(ownerId)
             }
 
             val books = booksByList[listName].orEmpty()
@@ -173,9 +171,14 @@ fun Navigation(navController: NavHostController) {
         }
 
 
-        composable("user_books") {
+        composable("user_books/{ownerId}") { backStackEntry ->
             val bookViewModel: BookViewModel = viewModel()
+            val ownerId = backStackEntry.arguments?.getString("ownerId") ?: return@composable
             val userBooks by bookViewModel.userBooks.collectAsState()
+
+            LaunchedEffect(ownerId) {
+                bookViewModel.loadBooksByUser(ownerId)
+            }
 
             FullListScreen(
                 title = "Todas las historias",
@@ -184,6 +187,7 @@ fun Navigation(navController: NavHostController) {
                 onBookClick = { book -> navController.navigate("book_detail/${book.id}") }
             )
         }
+
 
         composable("archived_books") {
             val bookViewModel: BookViewModel = viewModel()
@@ -196,6 +200,8 @@ fun Navigation(navController: NavHostController) {
                 onBookClick = { book -> navController.navigate("book_detail/${book.id}") }
             )
         }
+
+
 
 
 

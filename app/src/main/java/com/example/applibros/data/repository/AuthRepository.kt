@@ -31,6 +31,7 @@ class AuthRepository {
                                 val user = User(
                                     uid = firebaseUser.uid,
                                     username = username,
+                                    username_lowercase = username.lowercase(),
                                     email = firebaseUser.email ?: "",
                                     photoUrl = firebaseUser.photoUrl?.toString() ?: ""
                                 )
